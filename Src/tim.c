@@ -3,6 +3,7 @@
 #define GPIOAEN			(1U<<0)
 #define TIM2EN			(1U<<0)
 #define TIM3EN			(1U<<1)
+#define TIM4EN			(1U<<2)
 #define CR1_CEN			(1U<<0)
 
 #define CCMR1_OC1M		(1U<<3)
@@ -95,3 +96,48 @@ void tim3_msec_init(uint16_t msec_delay)
 	NVIC_EnableIRQ(TIM3_IRQn);
 }
 
+void tim4_blocking_delay_init(void)
+{
+//	Enable clock access to TIM2
+	RCC->APB1ENR |= TIM4EN;
+
+//	Set prescaler value
+	TIM4->PSC = 16000 - 1; // 16MHz to 1kHz
+//	Set initial auto-reload value
+	TIM4->ARR = 1 - 1; // 1kHz to 1kHz (1ms)
+
+//	Set URS - do not generate interrupt when UG bit is set in EGR
+	TIM4->CR1 |= CR1_URS;
+
+//	Initialize counter and update registers
+	TIM4->EGR |= EGR_UG;
+
+//	Make sure UIF is reset
+	TIM4->SR &= ~(SR_UIF);
+
+//	Disable timer on init
+	TIM4->CR1 &= ~CR1_CEN;
+
+}
+
+void generate_ms_delay(uint16_t msec_delay)
+{
+//	Set auto-reload value
+	TIM4->ARR = msec_delay - 1;
+
+//	Initialize counter and update registers
+	TIM4->EGR |= EGR_UG;
+
+//	Make sure UIF is reset
+	TIM4->SR &= ~(SR_UIF);
+
+//	Enable timer
+	TIM4->CR1 |= CR1_CEN;
+
+	while(!(TIM4->SR & SR_UIF)){}
+
+//	Clear UIF and disable timer
+	TIM4->SR &= ~(SR_UIF);
+	TIM4->CR1 &= ~CR1_CEN;
+
+}
