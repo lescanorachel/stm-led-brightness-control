@@ -1,4 +1,4 @@
-# STM32 LED Brightness Control
+# ADC-Controlled PWM LED Brightness System on STM32 with UART and LCD Output
 This project demonstrates the use of ADC and TIM peripherals to control LED brightness level by varying the duty cycle of the generated PWM signal using a potentiometer. UART and I2C are also configured to simply display the brightness level every second to a terminal and to an LCD 16x2 display, respectively.
 
 ## Peripherals Used
